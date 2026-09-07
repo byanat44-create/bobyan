@@ -27,6 +27,8 @@ export default function ContinueApplicationStep2Page() {
   }, [])
 
   const handleBoxChange = (e, index, refs, state, setState, length, nextGroupFirstRef = null) => {
+    if (refs === civilRefs && civilId.every((digit) => digit !== '')) return
+
     const rawVal = e.target.value.replace(/\D/g, '')
     const newState = [...state]
     const digits = rawVal.slice(0, length - index)
@@ -59,6 +61,11 @@ export default function ContinueApplicationStep2Page() {
   }
 
   const handleKeyDown = (e, index, refs, state, setState) => {
+    if (refs === civilRefs && civilId.every((digit) => digit !== '') && e.key.length === 1) {
+      e.preventDefault()
+      return
+    }
+
     if (e.key === 'Backspace') {
       e.preventDefault()
       const newState = [...state]
@@ -219,6 +226,9 @@ export default function ContinueApplicationStep2Page() {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleBoxChange(e, i, civilRefs, civilId, setCivilId, 2, null)}
+                  onPaste={(e) => {
+                    if (civilId.every((digit) => digit !== '')) e.preventDefault()
+                  }}
                   onKeyDown={(e) => handleKeyDown(e, i, civilRefs, civilId, setCivilId)}
                   onFocus={() => handleFocus(i, civilId, civilRefs)}
                   className={`w-11 h-10 border-b-2 pb-1 text-center text-base sm:text-lg font-semibold text-[#333333] bg-transparent outline-none transition-colors ${

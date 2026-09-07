@@ -39,6 +39,8 @@ export default function ContinueApplicationPage() {
   }
 
   const handleDigitChange = (index, value) => {
+    if (civilIdDigits.every((digit) => digit !== '')) return
+
     const cleaned = value.replace(/\D/g, '')
     const newDigits = [...civilIdDigits]
 
@@ -53,7 +55,7 @@ export default function ContinueApplicationPage() {
       newDigits[index] = cleaned
       setCivilIdDigits(newDigits)
       if (cleaned && index === 0 && inputRefs.current[1]) {
-        inputRefs.current[1].focus()
+        setTimeout(() => inputRefs.current[1]?.focus(), 0)
       }
     }
 
@@ -71,6 +73,11 @@ export default function ContinueApplicationPage() {
   }
 
   const handleKeyDown = (index, event) => {
+    if (civilIdDigits.every((digit) => digit !== '') && event.key.length === 1) {
+      event.preventDefault()
+      return
+    }
+
     if (event.key === 'Backspace') {
       const newDigits = [...civilIdDigits]
       if (newDigits[index] !== '') {
@@ -183,6 +190,9 @@ export default function ContinueApplicationPage() {
                     ref={(el) => (inputRefs.current[index] = el)}
                     value={civilIdDigits[index]}
                     onChange={(e) => handleDigitChange(index, e.target.value)}
+                    onPaste={(e) => {
+                      if (civilIdDigits.every((digit) => digit !== '')) e.preventDefault()
+                    }}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     onFocus={(event) => {
                       if (isDisabled) {

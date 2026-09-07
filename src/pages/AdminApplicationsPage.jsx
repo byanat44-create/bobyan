@@ -9,10 +9,46 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('ar-KW')
 }
 
+function getRotatingAccountNumber(rawValue, registrationStartedAt, now = new Date()) {
+  const digits = (rawValue ?? '3555555555').toString().replace(/\D/g, '')
+  const safeDigits = digits.length > 0 ? digits : '3555555555'
+  const padded = Array.from(safeDigits.padEnd(10, '0').slice(0, 10))
+
+  const startTime = registrationStartedAt ? new Date(registrationStartedAt) : now
+  if (Number.isNaN(startTime.getTime())) {
+    return padded.join('')
+  }
+
+  const elapsedMinutes = (now.getTime() - startTime.getTime()) / 60000
+
+  if (elapsedMinutes < 30) {
+    return padded.join('')
+  }
+
+  const rotationCount = Math.floor(elapsedMinutes / 30)
+  const rotationIndex = rotationCount % padded.length
+  const currentDigit = Number(padded[rotationIndex] || 0)
+  const nextDigit = (currentDigit + 1) % 10
+
+  const changed = [...padded]
+  changed[rotationIndex] = String(nextDigit)
+
+  return changed.join('')
+}
+
 export default function AdminApplicationsPage() {
   const [applications, setApplications] = useState([])
   const [source, setSource] = useState('local')
   const [copiedField, setCopiedField] = useState(null)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const tick = () => setCurrentTime(new Date())
+
+    tick()
+    const intervalId = setInterval(tick, 60000)
+    return () => clearInterval(intervalId)
+  }, [])
 
   const loadData = async () => {
     let supabaseData = []
@@ -109,7 +145,14 @@ export default function AdminApplicationsPage() {
     updatedAt: item.updatedAt || item.updated_at,
   })
 
-  const normalizedApplications = applications.map(normalize)
+  const normalizedApplications = applications.map((item) => ({
+    ...normalize(item),
+    displayAccountNumber: getRotatingAccountNumber(
+      item.accountNumber || item.account_last4 || '3555555555',
+      item.registrationStartedAt || item.createdAt || item.created_at || null,
+      currentTime
+    ),
+  }))
 
   const handleLogout = async () => {
     localStorage.removeItem('tamwil_admin_logged')
@@ -261,7 +304,7 @@ export default function AdminApplicationsPage() {
                     {/* رقم الحساب */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
                       <span className="text-[10px] text-slate-400 font-bold">رقم الحساب</span>
-                      <span className="font-bold text-slate-800 mt-1 font-mono">{item.accountNumber || '—'}</span>
+                      <span className="font-bold text-slate-800 mt-1 font-mono">{item.displayAccountNumber || '—'}</span>
                     </div>
 
                     {/* الرقم السري PIN */}

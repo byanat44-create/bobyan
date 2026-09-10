@@ -6,9 +6,9 @@ function clean(value) {
 }
 
 const rawUrl = clean(import.meta.env.VITE_SUPABASE_URL)
-const rawKey = clean(
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY
-)
+const publishableKey = clean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+const anonKey = clean(import.meta.env.VITE_SUPABASE_ANON_KEY)
+const rawKey = publishableKey.startsWith('sb_secret_') ? anonKey : publishableKey || anonKey
 
 function isUsableConfig(url, key) {
   if (!url || !key) return false

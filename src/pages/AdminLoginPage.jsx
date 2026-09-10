@@ -19,7 +19,18 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError('')
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    let signInError
+    try {
+      const result = await supabase.auth.signInWithPassword({ email, password })
+      signInError = result.error
+    } catch (requestError) {
+      const message = requestError?.message || ''
+      signInError = {
+        message: message.includes('Failed to fetch')
+          ? 'تعذر الاتصال بخدمة Supabase. راجع VITE_SUPABASE_URL في ملف .env وتأكد أن رابط المشروع صحيح ويعمل.'
+          : message || 'تعذر الاتصال بخدمة تسجيل الدخول.',
+      }
+    }
 
     setLoading(false)
 

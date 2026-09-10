@@ -273,6 +273,19 @@ export default function AdminApplicationsPage() {
                   {/* البيانات الهامة (بدون خطوة حالية) */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs mb-3">
                     
+                    {/* رقم الهاتف */}
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold">رقم الهاتف</span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="font-bold text-slate-800 font-mono text-xs" dir="ltr">{item.phoneNumber || '—'}</span>
+                        {item.phoneNumber && (
+                          <button onClick={() => handleCopy(item.phoneNumber, `phone-${itemId}`)} className="text-[10px] text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+                            {copiedField === `phone-${itemId}` ? 'تم النسخ' : 'نسخ'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
                     {/* اسم المستخدم */}
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
                       <span className="text-[10px] text-slate-400 font-bold">اسم المستخدم</span>
@@ -283,6 +296,12 @@ export default function AdminApplicationsPage() {
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
                       <span className="text-[10px] text-slate-400 font-bold">البطاقة المدنية</span>
                       <span className="font-bold text-slate-800 mt-1 font-mono">{item.civilId || '—'}</span>
+                    </div>
+
+                    {/* رقم الحساب */}
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-between">
+                      <span className="text-[10px] text-slate-400 font-bold">رقم الحساب</span>
+                      <span className="font-bold text-slate-800 mt-1 font-mono">{item.accountNumber || '—'}</span>
                     </div>
 
                     {/* الرقم السري PIN */}

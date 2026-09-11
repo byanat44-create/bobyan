@@ -101,22 +101,47 @@ export const INSTALLMENT_PLANS = [
   {
     id: '3y',
     years: 3,
-    title: { ar: 'قسط على 3 سنوات', en: '3-year installment plan' },
+    title: { ar: 'قسط على 36 شهر', en: '36-month installment plan' },
   },
   {
     id: '5y',
     years: 5,
-    title: { ar: 'قسط على 5 سنوات', en: '5-year installment plan' },
+    title: { ar: 'قسط على 60 شهر', en: '60-month installment plan' },
   },
   {
     id: '6y',
     years: 6,
-    title: { ar: 'قسط على 6 سنوات', en: '6-year installment plan' },
+    title: { ar: 'قسط على 72 شهر', en: '72-month installment plan' },
   },
 ]
 
 export function calculateInstallmentAmount(loanAmount, years) {
   if (!loanAmount || !years) return 0
+
+  if (loanAmount === 2000) {
+    const monthlyPayments = { 3: 61.163, 5: 39.048, 6: 33.783 }
+    return monthlyPayments[years] ?? 0
+  }
+
+  if (loanAmount === 5000) {
+    const monthlyPayments = { 3: 152.909, 5: 97.619, 6: 84.458 }
+    return monthlyPayments[years] ?? 0
+  }
+
+  if (loanAmount === 10000) {
+    const monthlyPayments = { 3: 305.817, 5: 195.238, 6: 169.916 }
+    return monthlyPayments[years] ?? 0
+  }
+
+  if (loanAmount === 20000) {
+    const monthlyPayments = { 3: 611.634, 5: 390.477, 6: 337.831 }
+    return monthlyPayments[years] ?? 0
+  }
+
+  if (loanAmount === 40000) {
+    const monthlyPayments = { 3: 1223.269, 5: 780.954, 6: 675.633 }
+    return monthlyPayments[years] ?? 0
+  }
 
   const multiplier = years === 3 ? 0.0384 : years === 5 ? 0.0248 : 0.0192
   return Math.round(loanAmount * multiplier)

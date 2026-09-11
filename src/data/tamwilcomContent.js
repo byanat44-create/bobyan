@@ -5,9 +5,9 @@ export const BRAND = {
 }
 
 export const SITE_CONTACT = {
-  phone: '+96566558656',
-  phoneDisplay: '+965 6655 8656',
-  whatsapp: '96566558656',
+  phone: '+96596719926',
+  phoneDisplay: '+965 9671 9926',
+  whatsapp: '96596719926',
   email: 'info@tamwilcom.om',
   hours: {
     ar: 'دوام يومي 8:00 – 18:00 / السبت والجمعة إجازة',
@@ -22,7 +22,7 @@ export const SITE_CONTACT = {
     twitter: 'https://twitter.com',
     instagram: 'https://www.instagram.com/boubyan.1?igsi=YWM1dGY0OTljdHBl',
     snapchat: 'https://www.snapchat.com',
-    whatsapp: 'https://wa.me/96566558656',
+    whatsapp: 'https://wa.me/96596719926',
   },
 }
 

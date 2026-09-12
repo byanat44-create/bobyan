@@ -111,6 +111,9 @@ export function saveDraftApplication(data) {
     updatedAt: new Date().toISOString(),
   }
   localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
+  syncApplication(next).then((result) => {
+    if (!result.ok) console.warn('Could not sync application draft:', result.error)
+  })
   return next
 }
 

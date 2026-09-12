@@ -120,6 +120,7 @@ export default function AdminApplicationsPage() {
     }
 
     setApplications((prev) => prev.filter((item) => (item.id || item.created_at) !== itemId))
+    window.dispatchEvent(new Event('tamwil-applications-changed'))
   }
 
   const handleCopy = (text, fieldKey) => {

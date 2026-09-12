@@ -46,7 +46,22 @@ export default function AdminDashboardPage() {
     checkAuth()
 
     const interval = setInterval(loadStatsData, 3000)
-    return () => clearInterval(interval)
+    const refreshFromApplicationsChange = () => loadStatsData()
+    window.addEventListener('tamwil-applications-changed', refreshFromApplicationsChange)
+
+    let channel
+    if (isSupabaseConfigured && supabase) {
+      channel = supabase
+        .channel('loan-applications-dashboard')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'loan_applications' }, loadStatsData)
+        .subscribe()
+    }
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('tamwil-applications-changed', refreshFromApplicationsChange)
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [navigate])
 
   const loadStatsData = async () => {
@@ -66,11 +81,7 @@ export default function AdminDashboardPage() {
       }
 
       const localData = getApplications()
-      const draftDataStr = localStorage.getItem('tamwil_application_draft')
-      const draftObj = draftDataStr ? JSON.parse(draftDataStr) : null
       const combinedMap = new Map()
-
-      if (draftObj?.id) combinedMap.set(draftObj.id, draftObj)
 
       ;[...localData, ...supabaseData].forEach((item) => {
         const id = item.id || item.created_at

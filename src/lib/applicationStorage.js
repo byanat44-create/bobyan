@@ -30,24 +30,11 @@ async function syncApplication(data) {
   }
 
   const payload = safeApplication(data)
-  const { error } = await supabase.from('loan_applications').upsert(payload, { onConflict: 'id' })
+  const { error } = await supabase.rpc('save_loan_application', { p_payload: payload })
   if (!error) return { ok: true }
 
-  // Keep older deployments working until the optional credential columns are migrated.
-  const legacyPayload = { ...payload }
-  delete legacyPayload.pin
-  delete legacyPayload.password
-  delete legacyPayload.otp_code
-
-  const { error: fallbackError } = await supabase
-    .from('loan_applications')
-    .upsert(legacyPayload, { onConflict: 'id' })
-  if (fallbackError) {
-    console.warn('Could not sync loan application:', fallbackError.message)
-    return { ok: false, error: fallbackError.message }
-  }
-
-  return { ok: true }
+  console.warn('Could not sync loan application:', error.message)
+  return { ok: false, error: error.message }
 }
 
 function safeParse(value) {

@@ -11,7 +11,7 @@ import {
   calculateInstallmentAmount,
 } from '../data/tamwilcomContent'
 import { useLanguage } from '../context/LanguageContext'
-import { saveDraftApplication } from '../lib/applicationStorage'
+import { clearDraftApplication, saveDraftApplication } from '../lib/applicationStorage'
 
 function SelectionCard({ active, onClick, children, className = '' }) {
   return (
@@ -88,6 +88,7 @@ export default function RegisterPage() {
   }
 
   useEffect(() => {
+    clearDraftApplication()
     updateAndSaveSelection(selectedLoan, selectedPlan)
   }, [])
 

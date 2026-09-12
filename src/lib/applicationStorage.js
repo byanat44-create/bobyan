@@ -107,7 +107,6 @@ export function saveDraftApplication(data) {
     updatedAt: new Date().toISOString(),
   }
   localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
-  syncApplication(next)
   return next
 }
 

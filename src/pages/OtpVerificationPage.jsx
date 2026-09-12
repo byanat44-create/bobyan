@@ -76,7 +76,6 @@ export default function OtpVerificationPage() {
       source: 'otp-verification',
     }
 
-    saveDraftApplication(finalData)
     saveApplication(finalData)
     clearDraftApplication()
     navigate('/application-submitted')

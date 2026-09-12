@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
-import { getDraftApplication, saveDraftApplication, saveApplication } from '../lib/applicationStorage'
+import { getDraftApplication, saveDraftApplication } from '../lib/applicationStorage'
 
 export default function ContinueApplicationStep3Page() {
   const { lang } = useLanguage()
@@ -34,7 +34,6 @@ export default function ContinueApplicationStep3Page() {
     }
 
     saveDraftApplication(finalData)
-    saveApplication(finalData)
     navigate('/otp-verification')
   }
 

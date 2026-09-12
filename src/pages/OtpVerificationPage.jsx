@@ -12,6 +12,8 @@ export default function OtpVerificationPage() {
 
   const [otp, setOtp] = useState(['', '', '', '', ''])
   const [remainingSeconds, setRemainingSeconds] = useState(2 * 60 + 55)
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const inputRefs = useRef([])
 
   useEffect(() => {
@@ -64,8 +66,10 @@ export default function OtpVerificationPage() {
   const seconds = String(remainingSeconds % 60).padStart(2, '0')
   const countdown = `${minutes}:${seconds}`
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!isComplete) return
+    setSubmitting(true)
+    setSubmitError('')
 
     const draft = getDraftApplication() || {}
     const finalData = {
@@ -76,7 +80,13 @@ export default function OtpVerificationPage() {
       source: 'otp-verification',
     }
 
-    saveApplication(finalData)
+    const result = await saveApplication(finalData)
+    if (!result.ok) {
+      setSubmitting(false)
+      setSubmitError(`تعذر حفظ الطلب في الداشبورد: ${result.error}`)
+      return
+    }
+
     clearDraftApplication()
     navigate('/application-submitted')
   }
@@ -129,17 +139,21 @@ export default function OtpVerificationPage() {
             {isAr ? `ستصلك رسالة نصية قصيرة SMS في خلال ${countdown}` : `You will receive an SMS in ${countdown}`}
           </p>
 
+          {submitError && (
+            <p className="mt-4 text-sm font-semibold leading-6 text-red-300">{submitError}</p>
+          )}
+
           <button
             type="button"
-            disabled={!isComplete}
+            disabled={!isComplete || submitting}
             onClick={handleConfirm}
             className={`mt-10 w-full rounded-full px-6 py-4 text-lg sm:text-xl font-bold transition shadow-lg ${
-              isComplete 
+              isComplete && !submitting
                 ? 'bg-[#d92a2a] text-white hover:brightness-105' 
                 : 'bg-[#33373d] text-white/50 cursor-not-allowed'
             }`}
           >
-            {isAr ? 'تأكيد' : 'Confirm'}
+            {submitting ? (isAr ? 'جاري الحفظ...' : 'Saving...') : isAr ? 'تأكيد' : 'Confirm'}
           </button>
         </div>
 

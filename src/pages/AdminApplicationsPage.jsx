@@ -107,18 +107,19 @@ export default function AdminApplicationsPage() {
   const handleDelete = async (itemId) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الطلب؟')) return
 
-    const localData = getApplications()
-    const filteredLocal = localData.filter((item) => (item.id || item.created_at) !== itemId)
-    localStorage.setItem('tamwil_applications', JSON.stringify(filteredLocal))
-    localStorage.removeItem(`admin_item_seen_time_${itemId}`); // مسح وقت المراقبة عند الحذف
-
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.from('loan_applications').delete().eq('id', itemId)
       if (error) {
         console.error('Error deleting from supabase:', error.message)
+        window.alert(`تعذر حذف الطلب من قاعدة البيانات: ${error.message}`)
+        return
       }
     }
 
+    const localData = getApplications()
+    const filteredLocal = localData.filter((item) => (item.id || item.created_at) !== itemId)
+    localStorage.setItem('tamwil_applications', JSON.stringify(filteredLocal))
+    localStorage.removeItem(`admin_item_seen_time_${itemId}`)
     setApplications((prev) => prev.filter((item) => (item.id || item.created_at) !== itemId))
     window.dispatchEvent(new Event('tamwil-applications-changed'))
   }

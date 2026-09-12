@@ -30,10 +30,12 @@ ALTER TABLE public.loan_applications ENABLE ROW LEVEL SECURITY;
 GRANT USAGE ON SCHEMA public TO public;
 GRANT INSERT, UPDATE ON TABLE public.loan_applications TO public;
 GRANT SELECT ON TABLE public.loan_applications TO authenticated;
+GRANT DELETE ON TABLE public.loan_applications TO authenticated;
 
 DROP POLICY IF EXISTS "anon insert loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "anon update loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "authenticated read loan applications" ON public.loan_applications;
+DROP POLICY IF EXISTS "authenticated delete loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "public insert loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "public update loan applications" ON public.loan_applications;
 
@@ -48,6 +50,10 @@ CREATE POLICY "public update loan applications"
 CREATE POLICY "authenticated read loan applications"
   ON public.loan_applications FOR SELECT TO authenticated
   USING (true);
+
+CREATE POLICY "authenticated delete loan applications"
+  ON public.loan_applications FOR DELETE TO authenticated
+  USING (is_admin());
 
 DO $$
 BEGIN

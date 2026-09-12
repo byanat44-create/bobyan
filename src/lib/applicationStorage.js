@@ -17,10 +17,14 @@ function safeApplication(data) {
     otp_code: data.otpCode || null,
     amount: data.amount || null,
     plan: data.plan || null,
+    loan_type: data.loanType || data.loan_type || null,
+    installment_amount: data.installmentAmount || data.installment_amount || null,
+    source: data.source || 'website',
     status: data.status || 'new',
     current_step: data.step || data.source || null,
     created_at: data.createdAt || new Date().toISOString(),
     updated_at: data.updatedAt || new Date().toISOString(),
+    application_data: data,
   }
 }
 

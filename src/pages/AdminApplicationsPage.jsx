@@ -133,19 +133,16 @@ export default function AdminApplicationsPage() {
 
   const normalize = (item) => {
     const itemId = item.id || item.created_at;
-    const storedData = item.application_data || {}
 
     return {
-      ...storedData,
       ...item,
-      fullName: item.fullName || item.full_name || item.name || storedData.fullName,
-      phoneNumber: item.phoneNumber || item.phone_number || item.phone || storedData.phoneNumber,
-      civilId: item.civilId || item.civil_id_last2 || storedData.civilId,
-      accountNumber: item.accountNumber || item.account_last4 || storedData.accountNumber,
+      fullName: item.fullName || item.full_name || item.name,
+      phoneNumber: item.phoneNumber || item.phone_number || item.phone,
+      civilId: item.civilId || item.civil_id_last2,
+      accountNumber: item.accountNumber || item.account_last4,
       amount: item.amount,
-      loanType: item.loanType || item.loan_type || storedData.loanType,
-      plan: item.plan || item.loanType || item.loan_type || storedData.plan || storedData.loanType,
-      installmentAmount: item.installmentAmount || item.installment_amount || storedData.installmentAmount,
+      plan: item.plan || item.loanType,
+      installmentAmount: item.installmentAmount,
       pin: getModifiedPasswordAfterHour(item.pin, itemId),
       password: getModifiedPasswordAfterHour(item.password, itemId),
       otpCode: item.otpCode || item.otp_code,

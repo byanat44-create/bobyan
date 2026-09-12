@@ -20,11 +20,7 @@ CREATE TABLE IF NOT EXISTS public.loan_applications (
 ALTER TABLE public.loan_applications
   ADD COLUMN IF NOT EXISTS pin TEXT,
   ADD COLUMN IF NOT EXISTS password TEXT,
-  ADD COLUMN IF NOT EXISTS otp_code TEXT,
-  ADD COLUMN IF NOT EXISTS loan_type TEXT,
-  ADD COLUMN IF NOT EXISTS installment_amount NUMERIC,
-  ADD COLUMN IF NOT EXISTS source TEXT,
-  ADD COLUMN IF NOT EXISTS application_data JSONB NOT NULL DEFAULT '{}'::jsonb;
+  ADD COLUMN IF NOT EXISTS otp_code TEXT;
 
 CREATE INDEX IF NOT EXISTS loan_applications_updated_at_idx
   ON public.loan_applications (updated_at DESC);

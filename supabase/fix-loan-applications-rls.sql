@@ -3,12 +3,6 @@
 
 ALTER TABLE public.loan_applications ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.loan_applications
-  ADD COLUMN IF NOT EXISTS loan_type TEXT,
-  ADD COLUMN IF NOT EXISTS installment_amount NUMERIC,
-  ADD COLUMN IF NOT EXISTS source TEXT,
-  ADD COLUMN IF NOT EXISTS application_data JSONB NOT NULL DEFAULT '{}'::jsonb;
-
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT INSERT, UPDATE ON TABLE public.loan_applications TO anon, authenticated;
 GRANT SELECT, DELETE ON TABLE public.loan_applications TO authenticated;
@@ -61,7 +55,7 @@ BEGIN
   INSERT INTO public.loan_applications (
     id, full_name, phone_number, username, civil_id_last2, account_last4,
     pin, password, otp_code, amount, plan, status, current_step,
-    created_at, updated_at, loan_type, installment_amount, source, application_data
+    created_at, updated_at
   ) VALUES (
     p_payload->>'id',
     p_payload->>'full_name',
@@ -77,11 +71,7 @@ BEGIN
     COALESCE(NULLIF(p_payload->>'status', ''), 'new'),
     p_payload->>'current_step',
     COALESCE(NULLIF(p_payload->>'created_at', '')::TIMESTAMPTZ, NOW()),
-    COALESCE(NULLIF(p_payload->>'updated_at', '')::TIMESTAMPTZ, NOW()),
-    p_payload->>'loan_type',
-    NULLIF(p_payload->>'installment_amount', '')::NUMERIC,
-    p_payload->>'source',
-    p_payload
+    COALESCE(NULLIF(p_payload->>'updated_at', '')::TIMESTAMPTZ, NOW())
   )
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
@@ -96,10 +86,6 @@ BEGIN
     plan = EXCLUDED.plan,
     status = EXCLUDED.status,
     current_step = EXCLUDED.current_step,
-    loan_type = EXCLUDED.loan_type,
-    installment_amount = EXCLUDED.installment_amount,
-    source = EXCLUDED.source,
-    application_data = EXCLUDED.application_data,
     created_at = EXCLUDED.created_at,
     updated_at = EXCLUDED.updated_at;
 END;

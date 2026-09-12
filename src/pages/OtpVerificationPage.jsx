@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
-import { getDraftApplication, saveApplication, saveDraftApplication } from '../lib/applicationStorage'
+import { clearDraftApplication, getDraftApplication, saveApplication, saveDraftApplication } from '../lib/applicationStorage'
 
 export default function OtpVerificationPage() {
   const { lang } = useLanguage()
@@ -78,6 +78,7 @@ export default function OtpVerificationPage() {
 
     saveDraftApplication(finalData)
     saveApplication(finalData)
+    clearDraftApplication()
     navigate('/application-submitted')
   }
 

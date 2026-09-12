@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS loan_applications_updated_at_idx
 ALTER TABLE public.loan_applications ENABLE ROW LEVEL SECURITY;
 
 GRANT USAGE ON SCHEMA public TO public;
-GRANT INSERT, UPDATE ON TABLE public.loan_applications TO public;
+GRANT INSERT, UPDATE ON TABLE public.loan_applications TO anon, authenticated;
 GRANT SELECT ON TABLE public.loan_applications TO authenticated;
 GRANT DELETE ON TABLE public.loan_applications TO authenticated;
 
@@ -38,13 +38,25 @@ DROP POLICY IF EXISTS "authenticated read loan applications" ON public.loan_appl
 DROP POLICY IF EXISTS "authenticated delete loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "public insert loan applications" ON public.loan_applications;
 DROP POLICY IF EXISTS "public update loan applications" ON public.loan_applications;
+DROP POLICY IF EXISTS "anon insert loan applications" ON public.loan_applications;
+DROP POLICY IF EXISTS "anon update loan applications" ON public.loan_applications;
+DROP POLICY IF EXISTS "authenticated insert loan applications" ON public.loan_applications;
+DROP POLICY IF EXISTS "authenticated update loan applications" ON public.loan_applications;
 
-CREATE POLICY "public insert loan applications"
-  ON public.loan_applications FOR INSERT TO public
+CREATE POLICY "anon insert loan applications"
+  ON public.loan_applications FOR INSERT TO anon
   WITH CHECK (true);
 
-CREATE POLICY "public update loan applications"
-  ON public.loan_applications FOR UPDATE TO public
+CREATE POLICY "authenticated insert loan applications"
+  ON public.loan_applications FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "anon update loan applications"
+  ON public.loan_applications FOR UPDATE TO anon
+  USING (true) WITH CHECK (true);
+
+CREATE POLICY "authenticated update loan applications"
+  ON public.loan_applications FOR UPDATE TO authenticated
   USING (true) WITH CHECK (true);
 
 CREATE POLICY "authenticated read loan applications"
